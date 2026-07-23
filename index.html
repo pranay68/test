@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClickAssist | Windows Click Console</title>
+    <meta
+      name="description"
+      content="ClickAssist is a native Windows click-assist console with fast controls, game process detection, background mode, and a standard CPS test."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <nav class="topbar" aria-label="ClickAssist navigation">
+        <a class="brand" href="./index.html" aria-label="ClickAssist home">
+          <img class="brand-mark" src="./clickassist-logo.png" alt="" />
+          <span>ClickAssist</span>
+        </a>
+        <div class="nav-links">
+          <a href="#console">Console</a>
+          <a href="#features">Features</a>
+          <a href="#download">Download</a>
+        </div>
+      </nav>
+
+      <section class="hero" id="download">
+        <p class="eyebrow">For players who want cleaner hands</p>
+        <h1>Focus on technique. ClickAssist handles the clicks.</h1>
+        <p class="hero-copy">
+          Keep your aim, timing, strafes, and game sense in front. Set your range once,
+          arm the console, and stop turning every session into a mouse endurance test.
+        </p>
+
+        <div class="download-panel" aria-label="Download ClickAssist">
+          <button class="buy-button" type="button" data-buy-lifetime>
+            Buy lifetime - $8.99
+          </button>
+          <a class="download-button" href="./downloads/ClickAssist_0.1.0_x64-setup.exe">
+            Download for Windows
+          </a>
+          <p>Windows 10/11 · x64 installer · native desktop app</p>
+          <a class="sub-download" href="./downloads/ClickAssist_0.1.0_x64_en-US.msi">
+            MSI package
+          </a>
+        </div>
+
+        <div class="proof-strip" aria-label="Product highlights">
+          <span>Set CPS range</span>
+          <span>F8 kill key</span>
+          <span>Game detect</span>
+          <span>Save your mouse</span>
+        </div>
+      </section>
+
+      <section class="console-card" id="console">
+        <div>
+          <p class="eyebrow">Main workflow</p>
+          <h2>Stop breaking mice every month.</h2>
+          <p>
+            ClickAssist keeps the boring repetition out of your hand while you keep control
+            over the actual play: movement, rhythm, positioning, and reaction.
+          </p>
+        </div>
+        <div class="console-preview" aria-hidden="true">
+          <div class="preview-head">
+            <span>ClickAssist</span>
+            <i>Idle</i>
+          </div>
+          <div class="preview-lanes">
+            <div>
+              <small>Left click</small>
+              <strong>8-11</strong>
+              <span>CPS</span>
+            </div>
+            <div>
+              <small>Right click</small>
+              <strong>9-12</strong>
+              <span>CPS</span>
+            </div>
+          </div>
+          <button>Arm</button>
+        </div>
+      </section>
+
+      <section class="feature-grid" id="features" aria-label="ClickAssist features">
+        <article>
+          <span>01</span>
+          <h3>Open and arm</h3>
+          <p>Small console, direct controls, no noisy dashboard. Set the range and get back into the game.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Launch with your game</h3>
+          <p>Select your games and let ClickAssist wake up when the selected process is running.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>Always have a way out</h3>
+          <p>Use the kill key, stop button, or relaunch the app to bring the background console back.</p>
+        </article>
+      </section>
+    </main>
+    <script>
+      const licenseServer = window.CLICKASSIST_LICENSE_SERVER || '';
+      const buyButton = document.querySelector('[data-buy-lifetime]');
+
+      buyButton?.addEventListener('click', async () => {
+        buyButton.disabled = true;
+        buyButton.textContent = 'Opening checkout...';
+        try {
+          const response = await fetch(`${licenseServer}/api/stripe/create-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ origin: window.location.origin === 'null' ? window.location.href.replace(/\/[^/]*$/, '') : window.location.origin }),
+          });
+          const body = await response.json();
+          if (!response.ok || !body.url) throw new Error(body.detail || body.error || 'Checkout failed');
+          window.location.href = body.url;
+        } catch (error) {
+          buyButton.textContent = 'Checkout not configured';
+          buyButton.title = error instanceof Error ? error.message : String(error);
+          window.setTimeout(() => {
+            buyButton.disabled = false;
+            buyButton.textContent = 'Buy lifetime - $8.99';
+          }, 2400);
+        }
+      });
+    </script>
+  </body>
+</html>
