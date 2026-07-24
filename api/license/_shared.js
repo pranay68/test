@@ -28,6 +28,25 @@ export async function loadLicense(keyHash) {
   return allowedLicenses.find((item) => item.keyHash === keyHash) || null;
 }
 
+export async function listLicenses() {
+  const store = storeConfig();
+  if (store.kind === 'upstash') {
+    const keys = await scanUpstashKeys(store, 'license:*');
+    if (keys.length === 0) return [];
+    const values = await Promise.all(keys.map((key) => upstashCommand(store, ['GET', key])));
+    return values
+      .filter(Boolean)
+      .map((value) => JSON.parse(value))
+      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  }
+
+  if (!store.allowEnvFallback) {
+    throw new Error('persistent_license_store_not_configured');
+  }
+
+  return parseJsonArray(process.env.LICENSE_KEYS_JSON || '[]');
+}
+
 export async function saveLicense(license) {
   const store = storeConfig();
   if (store.kind === 'upstash') {
@@ -40,7 +59,7 @@ export async function saveLicense(license) {
   }
 }
 
-export async function createLicenseRecord({ email, keyHash, deviceLimit = 2 }) {
+export async function createLicenseRecord({ email, keyHash, deviceLimit = 2, source = 'admin', stripeSessionId = null }) {
   const license = {
     email: email.toLowerCase(),
     keyHash,
@@ -48,11 +67,19 @@ export async function createLicenseRecord({ email, keyHash, deviceLimit = 2 }) {
     product,
     plan,
     deviceLimit,
+    source,
+    stripeSessionId,
     createdAt: new Date().toISOString(),
     activations: [],
   };
   await saveLicense(license);
   return license;
+}
+
+export async function loadLicenseByStripeSession(stripeSessionId) {
+  if (!stripeSessionId) return null;
+  const licenses = await listLicenses();
+  return licenses.find((license) => license.stripeSessionId === stripeSessionId) || null;
 }
 
 export function validateLicenseRecord(license, { email, deviceHash }) {
@@ -153,6 +180,15 @@ function storeConfig() {
   return { kind: 'env', allowEnvFallback: process.env.ALLOW_ENV_LICENSE_FALLBACK === '1' };
 }
 
+export function licenseStoreHealth() {
+  const store = storeConfig();
+  return {
+    persistent: store.kind === 'upstash',
+    kind: store.kind,
+    envFallbackEnabled: store.kind === 'env' && store.allowEnvFallback,
+  };
+}
+
 async function upstashCommand(store, command) {
   const response = await fetch(`${store.url}/pipeline`, {
     method: 'POST',
@@ -166,4 +202,17 @@ async function upstashCommand(store, command) {
   const [item] = await response.json();
   if (item.error) throw new Error(`upstash_error_${item.error}`);
   return item.result;
+}
+
+async function scanUpstashKeys(store, match) {
+  let cursor = '0';
+  const keys = [];
+
+  do {
+    const result = await upstashCommand(store, ['SCAN', cursor, 'MATCH', match, 'COUNT', '100']);
+    cursor = String(result?.[0] || '0');
+    keys.push(...(Array.isArray(result?.[1]) ? result[1] : []));
+  } while (cursor !== '0');
+
+  return keys;
 }

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Command Center | ClickAssist</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <nav class="topbar" aria-label="ClickAssist admin navigation">
+        <a class="brand" href="./index.html">
+          <img class="brand-mark" src="./clickassist-logo.png" alt="" />
+          <span>ClickAssist</span>
+        </a>
+        <div class="nav-links">
+          <a href="./index.html">Site</a>
+          <a href="./setup.html">Setup</a>
+        </div>
+      </nav>
+
+      <section class="legal-hero">
+        <p class="eyebrow">Command Center</p>
+        <h1>Issue, inspect, revoke.</h1>
+        <p class="hero-copy">Protected by `ADMIN_SECRET`. This page does not store the secret; paste it for each admin session.</p>
+      </section>
+
+      <section class="admin-grid">
+        <form class="legal-card admin-card" data-admin-form>
+          <h2>Issue License</h2>
+          <label>
+            Admin Secret
+            <input name="secret" type="password" autocomplete="off" placeholder="Bearer secret" />
+          </label>
+          <label>
+            Customer Email
+            <input name="email" type="email" placeholder="friend@example.com" />
+          </label>
+          <label>
+            Device Limit
+            <input name="deviceLimit" type="number" value="2" min="1" max="5" />
+          </label>
+          <button class="buy-button" type="submit">Issue Key</button>
+        </form>
+
+        <section class="legal-card admin-card">
+          <h2>System Health</h2>
+          <button class="download-button download-button--primary" type="button" data-refresh-admin>Refresh</button>
+          <pre data-health-output>Not loaded.</pre>
+        </section>
+      </section>
+
+      <section class="legal-card admin-card">
+        <h2>Licenses</h2>
+        <div class="admin-actions">
+          <input data-revoke-hash placeholder="Key hash to revoke" />
+          <button class="download-button" type="button" data-revoke>Revoke</button>
+        </div>
+        <pre data-admin-output>Issue or refresh to see output.</pre>
+      </section>
+    </main>
+
+    <script src="./admin.js" type="module"></script>
+  </body>
+</html>

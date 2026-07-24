@@ -14,15 +14,20 @@ export default async function handler(request, response) {
     });
   }
 
-  const origin = request.headers.origin || `https://${request.headers.host}`;
+  const requestedOrigin = String((request.body || {}).origin || '').trim();
+  const origin = requestedOrigin.startsWith('http') ? requestedOrigin : request.headers.origin || `https://${request.headers.host}`;
   const params = new URLSearchParams({
     mode: 'payment',
     'line_items[0][price]': stripePriceId,
     'line_items[0][quantity]': '1',
     success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/`,
+    billing_address_collection: 'auto',
+    customer_creation: 'always',
+    allow_promotion_codes: 'true',
     'metadata[product]': 'clickassist',
     'metadata[plan]': 'lifetime',
+    'metadata[source]': 'website',
   });
 
   const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
