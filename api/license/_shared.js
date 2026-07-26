@@ -1,4 +1,5 @@
 import { createHmac, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
+import { AzureNamedKeyCredential, TableClient } from '@azure/data-tables';
 
 export const product = 'clickassist';
 export const plan = 'lifetime';
@@ -15,6 +16,15 @@ export function requireLicenseConfig(response) {
 
 export async function loadLicense(keyHash) {
   const store = storeConfig();
+  if (store.kind === 'azure-table') {
+    try {
+      return fromAzureEntity(await azureTableClient(store).getEntity('license', keyHash));
+    } catch (error) {
+      if (error.statusCode === 404) return null;
+      throw error;
+    }
+  }
+
   if (store.kind === 'upstash') {
     const value = await upstashCommand(store, ['GET', licenseRedisKey(keyHash)]);
     return value ? JSON.parse(value) : null;
@@ -30,6 +40,16 @@ export async function loadLicense(keyHash) {
 
 export async function listLicenses() {
   const store = storeConfig();
+  if (store.kind === 'azure-table') {
+    const licenses = [];
+    for await (const entity of azureTableClient(store).listEntities({
+      queryOptions: { filter: `PartitionKey eq 'license'` },
+    })) {
+      licenses.push(fromAzureEntity(entity));
+    }
+    return licenses.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  }
+
   if (store.kind === 'upstash') {
     const keys = await scanUpstashKeys(store, 'license:*');
     if (keys.length === 0) return [];
@@ -49,6 +69,11 @@ export async function listLicenses() {
 
 export async function saveLicense(license) {
   const store = storeConfig();
+  if (store.kind === 'azure-table') {
+    await azureTableClient(store).upsertEntity(toAzureEntity(license), 'Replace');
+    return;
+  }
+
   if (store.kind === 'upstash') {
     await upstashCommand(store, ['SET', licenseRedisKey(license.keyHash), JSON.stringify(license)]);
     return;
@@ -174,6 +199,18 @@ function licenseRedisKey(keyHash) {
 }
 
 function storeConfig() {
+  const azureAccount = process.env.AZURE_STORAGE_ACCOUNT_NAME || '';
+  const azureKey = process.env.AZURE_STORAGE_ACCOUNT_KEY || '';
+  const azureTable = process.env.AZURE_TABLE_NAME || '';
+  if (azureAccount && azureKey && azureTable) {
+    return {
+      kind: 'azure-table',
+      accountName: azureAccount,
+      accountKey: azureKey,
+      tableName: azureTable,
+    };
+  }
+
   const url = (process.env.UPSTASH_REDIS_REST_URL || '').replace(/\/+$/, '');
   const token = process.env.UPSTASH_REDIS_REST_TOKEN || '';
   if (url && token) return { kind: 'upstash', url, token };
@@ -183,9 +220,55 @@ function storeConfig() {
 export function licenseStoreHealth() {
   const store = storeConfig();
   return {
-    persistent: store.kind === 'upstash',
+    persistent: store.kind === 'upstash' || store.kind === 'azure-table',
     kind: store.kind,
     envFallbackEnabled: store.kind === 'env' && store.allowEnvFallback,
+  };
+}
+
+function azureTableClient(store) {
+  const credential = new AzureNamedKeyCredential(store.accountName, store.accountKey);
+  return new TableClient(
+    `https://${store.accountName}.table.core.windows.net`,
+    store.tableName,
+    credential,
+  );
+}
+
+function toAzureEntity(license) {
+  return {
+    partitionKey: 'license',
+    rowKey: license.keyHash,
+    email: license.email,
+    keyHash: license.keyHash,
+    status: license.status || 'active',
+    product: license.product || product,
+    plan: license.plan || plan,
+    deviceLimit: Number(license.deviceLimit || process.env.LICENSE_DEVICE_LIMIT || 2),
+    source: license.source || 'unknown',
+    stripeSessionId: license.stripeSessionId || '',
+    createdAt: license.createdAt || new Date().toISOString(),
+    revokedAt: license.revokedAt || '',
+    activationsJson: JSON.stringify(Array.isArray(license.activations) ? license.activations : []),
+    allowedDeviceHashesJson: JSON.stringify(Array.isArray(license.allowedDeviceHashes) ? license.allowedDeviceHashes : []),
+  };
+}
+
+function fromAzureEntity(entity) {
+  const allowedDeviceHashes = parseJsonArray(entity.allowedDeviceHashesJson || '[]');
+  return {
+    email: entity.email,
+    keyHash: entity.keyHash || entity.rowKey,
+    status: entity.status || 'active',
+    product: entity.product || product,
+    plan: entity.plan || plan,
+    deviceLimit: Number(entity.deviceLimit || process.env.LICENSE_DEVICE_LIMIT || 2),
+    source: entity.source || 'unknown',
+    stripeSessionId: entity.stripeSessionId || null,
+    createdAt: entity.createdAt || null,
+    revokedAt: entity.revokedAt || null,
+    activations: parseJsonArray(entity.activationsJson || '[]'),
+    ...(allowedDeviceHashes.length ? { allowedDeviceHashes } : {}),
   };
 }
 

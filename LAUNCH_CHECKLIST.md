@@ -6,7 +6,8 @@ Current target: controlled paid early access, then public launch after persisten
 
 ## Required Before Paid Public Traffic
 
-- Configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in Vercel.
+- Configure Azure Table Storage in Vercel with `AZURE_STORAGE_ACCOUNT_NAME`, `AZURE_STORAGE_ACCOUNT_KEY`, and `AZURE_TABLE_NAME`.
+- Alternative: configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in Vercel.
 - Disable env fallback by removing `ALLOW_ENV_LICENSE_FALLBACK` or setting it to `0`.
 - Configure `ADMIN_SECRET` in Vercel.
 - Configure `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, and `STRIPE_WEBHOOK_SECRET`.
@@ -27,6 +28,23 @@ Current target: controlled paid early access, then public launch after persisten
 ```
 
 ## License Store Env
+
+Azure Table Storage is the preferred production store for this deployment:
+
+```powershell
+.\scripts\setup-azure-license-store.ps1
+```
+
+Manual Azure env setup:
+
+```powershell
+'clickassistlicxxxxx' | npx vercel env add AZURE_STORAGE_ACCOUNT_NAME production --force --yes
+'storage-account-key' | npx vercel env add AZURE_STORAGE_ACCOUNT_KEY production --force --yes
+'ClickAssistLicenses' | npx vercel env add AZURE_TABLE_NAME production --force --yes
+'0' | npx vercel env add ALLOW_ENV_LICENSE_FALLBACK production --force --yes
+```
+
+Upstash fallback:
 
 ```powershell
 'https://...' | npx vercel env add UPSTASH_REDIS_REST_URL production --force --yes
