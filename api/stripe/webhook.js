@@ -47,6 +47,7 @@ export default async function handler(request, response) {
     const license = await createLicenseRecord({
       email,
       keyHash: hashKey(licenseKey),
+      licenseKey,
       deviceLimit: Number(process.env.LICENSE_DEVICE_LIMIT || 2),
       source: 'stripe',
       stripeSessionId: session.id,

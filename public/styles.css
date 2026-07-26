@@ -252,6 +252,42 @@ h1 {
   font-size: 0.86rem;
 }
 
+.license-delivery-panel {
+  width: min(620px, 100%);
+}
+
+.delivery-status {
+  max-width: 480px;
+  line-height: 1.55;
+}
+
+.license-box {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.license-box span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.license-box code {
+  color: var(--text);
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: clamp(1rem, 2.4vw, 1.42rem);
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
 .sub-download {
   color: var(--body);
   font-size: 0.88rem;

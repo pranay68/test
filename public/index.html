@@ -41,15 +41,10 @@
             <img class="download-logo" src="./clickassist-logo.png" alt="" />
           </div>
           <button class="buy-button" type="button" data-buy-lifetime>
-            Buy lifetime - $3.99
+            Buy lifetime + download - $3.99
           </button>
-          <a class="download-button" href="./downloads/ClickAssist_0.1.0_x64-setup.exe">
-            Download for Windows
-          </a>
           <p>Windows 10/11 · x64 installer · native desktop app</p>
-          <a class="sub-download" href="./downloads/ClickAssist_0.1.0_x64_en-US.msi">
-            MSI package
-          </a>
+          <span class="sub-download">Installer unlocks after checkout</span>
         </div>
 
         <div class="proof-strip" aria-label="Product highlights">
@@ -169,7 +164,7 @@
           buyButton.title = error instanceof Error ? error.message : String(error);
           window.setTimeout(() => {
             buyButton.disabled = false;
-            buyButton.textContent = 'Buy lifetime - $3.99';
+            buyButton.textContent = 'Buy lifetime + download - $3.99';
           }, 2400);
         }
       });

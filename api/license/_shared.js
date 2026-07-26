@@ -1,4 +1,4 @@
-import { createHmac, createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, createPrivateKey, createPublicKey, randomBytes, sign, verify } from 'node:crypto';
 import { AzureNamedKeyCredential, TableClient } from '@azure/data-tables';
 
 export const product = 'clickassist';
@@ -84,7 +84,7 @@ export async function saveLicense(license) {
   }
 }
 
-export async function createLicenseRecord({ email, keyHash, deviceLimit = 2, source = 'admin', stripeSessionId = null }) {
+export async function createLicenseRecord({ email, keyHash, licenseKey = null, deviceLimit = 2, source = 'admin', stripeSessionId = null }) {
   const license = {
     email: email.toLowerCase(),
     keyHash,
@@ -97,6 +97,8 @@ export async function createLicenseRecord({ email, keyHash, deviceLimit = 2, sou
     createdAt: new Date().toISOString(),
     activations: [],
   };
+  const encryptedLicenseKey = encryptLicenseKey(licenseKey);
+  if (encryptedLicenseKey) license.encryptedLicenseKey = encryptedLicenseKey;
   await saveLicense(license);
   return license;
 }
@@ -105,6 +107,10 @@ export async function loadLicenseByStripeSession(stripeSessionId) {
   if (!stripeSessionId) return null;
   const licenses = await listLicenses();
   return licenses.find((license) => license.stripeSessionId === stripeSessionId) || null;
+}
+
+export function revealLicenseKey(license) {
+  return decryptLicenseKey(license?.encryptedLicenseKey || '');
 }
 
 export function validateLicenseRecord(license, { email, deviceHash }) {
@@ -249,6 +255,7 @@ function toAzureEntity(license) {
     stripeSessionId: license.stripeSessionId || '',
     createdAt: license.createdAt || new Date().toISOString(),
     revokedAt: license.revokedAt || '',
+    encryptedLicenseKey: license.encryptedLicenseKey || '',
     activationsJson: JSON.stringify(Array.isArray(license.activations) ? license.activations : []),
     allowedDeviceHashesJson: JSON.stringify(Array.isArray(license.allowedDeviceHashes) ? license.allowedDeviceHashes : []),
   };
@@ -267,9 +274,37 @@ function fromAzureEntity(entity) {
     stripeSessionId: entity.stripeSessionId || null,
     createdAt: entity.createdAt || null,
     revokedAt: entity.revokedAt || null,
+    encryptedLicenseKey: entity.encryptedLicenseKey || '',
     activations: parseJsonArray(entity.activationsJson || '[]'),
     ...(allowedDeviceHashes.length ? { allowedDeviceHashes } : {}),
   };
+}
+
+function encryptLicenseKey(licenseKey) {
+  const normalized = String(licenseKey || '').trim().toUpperCase();
+  if (!normalized) return '';
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', deliverySecretKey(), iv);
+  const ciphertext = Buffer.concat([cipher.update(normalized, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `v1.${iv.toString('base64url')}.${tag.toString('base64url')}.${ciphertext.toString('base64url')}`;
+}
+
+function decryptLicenseKey(encrypted) {
+  const [version, ivPart, tagPart, ciphertextPart] = String(encrypted || '').split('.');
+  if (version !== 'v1' || !ivPart || !tagPart || !ciphertextPart) return '';
+  const decipher = createDecipheriv('aes-256-gcm', deliverySecretKey(), Buffer.from(ivPart, 'base64url'));
+  decipher.setAuthTag(Buffer.from(tagPart, 'base64url'));
+  return Buffer.concat([
+    decipher.update(Buffer.from(ciphertextPart, 'base64url')),
+    decipher.final(),
+  ]).toString('utf8');
+}
+
+function deliverySecretKey() {
+  const seed = process.env.LICENSE_DELIVERY_SECRET || process.env.LICENSE_PRIVATE_KEY_PEM || process.env.ADMIN_SECRET || '';
+  if (!seed) throw new Error('license_delivery_secret_not_configured');
+  return createHash('sha256').update(seed).digest();
 }
 
 async function upstashCommand(store, command) {

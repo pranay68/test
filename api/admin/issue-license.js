@@ -21,6 +21,7 @@ export default async function handler(request, response) {
     const license = await createLicenseRecord({
       email,
       keyHash: hashKey(licenseKey),
+      licenseKey,
       deviceLimit,
     });
 

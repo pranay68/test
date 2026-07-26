@@ -17,24 +17,76 @@
           <span>ClickAssist</span>
         </a>
         <div class="nav-links">
-          <a href="./index.html#download">Download</a>
+          <a href="./setup.html">Setup</a>
         </div>
       </nav>
 
       <section class="success-card">
         <p class="eyebrow">Payment received</p>
-        <h1>Your license is ready.</h1>
+        <h1>Preparing your download.</h1>
         <p class="hero-copy">
-          Your payment is complete. Download the installer, then use the license key delivered
-          by ClickAssist support for the same purchase email.
+          Keep this page open. ClickAssist will confirm the Stripe session, show your license
+          key here, and start the Windows installer download.
         </p>
-        <div class="download-panel">
-          <a class="download-button download-button--primary" href="./downloads/ClickAssist_0.1.0_x64-setup.exe">
-            Download for Windows
+        <div class="download-panel license-delivery-panel">
+          <p class="delivery-status" data-delivery-status>Checking payment...</p>
+          <div class="license-box" hidden data-license-box>
+            <span>License key</span>
+            <code data-license-key></code>
+            <button class="download-button" type="button" data-copy-license>Copy key</button>
+          </div>
+          <a class="download-button download-button--primary" hidden data-download-link href="./downloads/ClickAssist_0.1.0_x64-setup.exe">
+            Download starting...
           </a>
+          <a class="sub-download" hidden data-msi-link href="./downloads/ClickAssist_0.1.0_x64_en-US.msi">MSI package</a>
           <a class="sub-download" href="./index.html">Back to product page</a>
         </div>
       </section>
     </main>
+    <script>
+      const statusEl = document.querySelector('[data-delivery-status]');
+      const boxEl = document.querySelector('[data-license-box]');
+      const keyEl = document.querySelector('[data-license-key]');
+      const copyButton = document.querySelector('[data-copy-license]');
+      const downloadLink = document.querySelector('[data-download-link]');
+      const msiLink = document.querySelector('[data-msi-link]');
+      const sessionId = new URLSearchParams(window.location.search).get('session_id');
+
+      async function loadLicense() {
+        if (!sessionId) {
+          statusEl.textContent = 'Missing Stripe session. Return to checkout from the product page.';
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/stripe/session-license?session_id=${encodeURIComponent(sessionId)}`);
+          const body = await response.json();
+          if (!response.ok) throw new Error(body.detail || body.error || 'License delivery failed');
+
+          keyEl.textContent = body.licenseKey;
+          boxEl.hidden = false;
+          downloadLink.href = body.downloadUrl || downloadLink.href;
+          msiLink.href = body.msiUrl || msiLink.href;
+          downloadLink.hidden = false;
+          msiLink.hidden = false;
+          statusEl.textContent = `License ready for ${body.email}. Your download should start automatically.`;
+          window.setTimeout(() => {
+            window.location.href = downloadLink.href;
+          }, 900);
+        } catch (error) {
+          statusEl.textContent = error instanceof Error ? error.message : String(error);
+        }
+      }
+
+      copyButton?.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(keyEl.textContent || '');
+        copyButton.textContent = 'Copied';
+        window.setTimeout(() => {
+          copyButton.textContent = 'Copy key';
+        }, 1400);
+      });
+
+      loadLicense();
+    </script>
   </body>
 </html>
