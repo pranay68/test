@@ -321,14 +321,15 @@ h1 {
 .console-card {
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
-  gap: 28px;
+  gap: 42px;
   align-items: center;
-  padding: 40px;
-  border: 1px solid var(--line);
-  border-radius: 34px;
+  padding: 52px 0 34px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.052), transparent 42%),
-    rgba(255, 255, 255, 0.03);
+    radial-gradient(500px 260px at 80% 20%, rgba(255, 255, 255, 0.045), transparent 68%),
+    transparent;
 }
 
 h2 {
@@ -438,16 +439,29 @@ h2 {
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 16px;
+  gap: 0;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .feature-grid article {
-  min-height: 205px;
-  padding: 22px;
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  background: var(--panel);
+  min-height: 188px;
+  padding: 24px 22px;
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), transparent),
+    transparent;
+}
+
+.feature-grid article:nth-child(3n) {
+  border-right: 0;
+}
+
+.feature-grid article:nth-last-child(-n + 3) {
+  border-bottom: 0;
 }
 
 .pitch-band {
@@ -455,18 +469,50 @@ h2 {
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
   gap: 28px;
   align-items: end;
-  margin-top: 16px;
-  padding: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.095);
-  border-radius: 34px;
+  margin-top: 22px;
+  padding: 46px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 0;
   background:
-    radial-gradient(520px 240px at 0 0, rgba(255, 255, 255, 0.08), transparent 62%),
-    rgba(255, 255, 255, 0.026);
+    radial-gradient(520px 240px at 0 0, rgba(255, 255, 255, 0.055), transparent 62%),
+    transparent;
 }
 
 .pitch-band p:last-child {
   margin: 0;
   line-height: 1.7;
+}
+
+.operator-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 20px 0 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.operator-strip div {
+  display: grid;
+  gap: 8px;
+  min-height: 130px;
+  padding: 22px 24px;
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.operator-strip div:last-child {
+  border-right: 0;
+}
+
+.operator-strip strong {
+  color: var(--text);
+  font-size: 1.04rem;
+  letter-spacing: -0.02em;
+}
+
+.operator-strip span {
+  color: var(--muted);
+  line-height: 1.55;
 }
 
 .success-card {
@@ -643,9 +689,22 @@ h3 {
   .console-card,
   .pitch-band,
   .feature-grid,
+  .operator-strip,
   .admin-grid,
   .admin-actions,
   .preview-lanes {
     grid-template-columns: 1fr;
+  }
+
+  .feature-grid article,
+  .feature-grid article:nth-child(3n),
+  .feature-grid article:nth-last-child(-n + 3),
+  .operator-strip div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .operator-strip div:last-child {
+    border-bottom: 0;
   }
 }
