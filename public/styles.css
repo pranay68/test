@@ -33,9 +33,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(820px 420px at 50% -120px, rgba(255, 255, 255, 0.12), transparent 62%),
-    radial-gradient(680px 340px at 12% 28%, rgba(170, 181, 194, 0.075), transparent 64%),
-    radial-gradient(540px 280px at 88% 20%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(900px 430px at 50% -90px, rgba(255, 255, 255, 0.15), transparent 62%),
+    radial-gradient(720px 360px at 10% 30%, rgba(170, 181, 194, 0.09), transparent 64%),
+    radial-gradient(620px 330px at 86% 20%, rgba(255, 255, 255, 0.064), transparent 60%),
     linear-gradient(180deg, #0d0f12 0%, #050607 42%, #020303 100%);
   color: var(--body);
 }
@@ -104,11 +104,20 @@ a {
 }
 
 .hero {
+  position: relative;
   display: grid;
   justify-items: center;
-  min-height: 590px;
-  padding: 82px 0 54px;
+  min-height: 620px;
+  padding: 78px 0 62px;
   text-align: center;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 38px 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
 }
 
 .eyebrow {
@@ -128,17 +137,17 @@ p {
 }
 
 h1 {
-  width: min(930px, 100%);
+  width: min(1040px, 100%);
   margin: 18px 0 0;
   color: var(--text);
-  font-size: clamp(3rem, 6.1vw, 5.9rem);
-  line-height: 0.96;
-  letter-spacing: -0.07em;
+  font-size: clamp(3rem, 6.4vw, 6.35rem);
+  line-height: 0.92;
+  letter-spacing: -0.085em;
   text-wrap: balance;
 }
 
 .hero-copy {
-  width: min(710px, 100%);
+  width: min(760px, 100%);
   margin: 22px 0 0;
   font-size: clamp(1.05rem, 1.8vw, 1.22rem);
   line-height: 1.6;
@@ -148,15 +157,38 @@ h1 {
   display: grid;
   justify-items: center;
   gap: 12px;
-  width: min(520px, 100%);
-  margin-top: 32px;
-  padding: 22px;
+  width: min(560px, 100%);
+  margin-top: 30px;
+  padding: 24px;
   border: 1px solid var(--line);
-  border-radius: 28px;
+  border-radius: 34px;
   background:
-    radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.1), transparent 55%),
+    radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.145), transparent 54%),
     rgba(255, 255, 255, 0.035);
-  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.32);
+  box-shadow:
+    0 40px 110px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.052);
+}
+
+.download-logo-wrap {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.015)),
+    #090b0d;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+}
+
+.download-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .buy-button,
@@ -234,7 +266,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 9px;
-  margin-top: 28px;
+  margin-top: 24px;
 }
 
 .proof-strip span {
@@ -255,7 +287,7 @@ h1 {
   grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
   gap: 28px;
   align-items: center;
-  padding: 36px;
+  padding: 40px;
   border: 1px solid var(--line);
   border-radius: 34px;
   background:
@@ -275,6 +307,27 @@ h2 {
 .feature-grid p {
   margin-bottom: 0;
   line-height: 1.62;
+}
+
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.mode-row span {
+  min-height: 40px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.mode-row b {
+  color: var(--text);
 }
 
 .console-preview {
@@ -354,11 +407,30 @@ h2 {
 }
 
 .feature-grid article {
-  min-height: 220px;
+  min-height: 205px;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 26px;
   background: var(--panel);
+}
+
+.pitch-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 28px;
+  align-items: end;
+  margin-top: 16px;
+  padding: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.095);
+  border-radius: 34px;
+  background:
+    radial-gradient(520px 240px at 0 0, rgba(255, 255, 255, 0.08), transparent 62%),
+    rgba(255, 255, 255, 0.026);
+}
+
+.pitch-band p:last-child {
+  margin: 0;
+  line-height: 1.7;
 }
 
 .success-card {
@@ -533,6 +605,7 @@ h3 {
   }
 
   .console-card,
+  .pitch-band,
   .feature-grid,
   .admin-grid,
   .admin-actions,
